@@ -78,6 +78,7 @@ public interface Platform {
         FABRIC("Fabric"),
         NEOFORGE("NeoForge"),
         FORGE("Forge"),
+        HYTALE("hytale"),
         STANDALONE("Standalone");
 
         private final String friendlyName;

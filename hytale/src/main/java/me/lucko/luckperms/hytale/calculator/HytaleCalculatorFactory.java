@@ -19,7 +19,6 @@ public class HytaleCalculatorFactory implements CalculatorFactory {
         this.hytalePlugin = hytalePlugin;
     }
 
-
     @Override
     public PermissionCalculator build(QueryOptions queryOptions, CacheMetadata metadata) {
         List<PermissionProcessor> processors = new ArrayList<>(4);
