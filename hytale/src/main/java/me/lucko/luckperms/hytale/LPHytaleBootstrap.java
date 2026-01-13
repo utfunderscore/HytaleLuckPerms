@@ -1,16 +1,19 @@
 package me.lucko.luckperms.hytale;
 
+import com.hypixel.hytale.server.core.NameMatching;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 import me.lucko.luckperms.common.plugin.bootstrap.LuckPermsBootstrap;
 import me.lucko.luckperms.common.plugin.classpath.ClassPathAppender;
 import me.lucko.luckperms.common.plugin.logging.PluginLogger;
 import me.lucko.luckperms.common.plugin.scheduler.SchedulerAdapter;
+import me.lucko.luckperms.hytale.logger.HytalePluginLogger;
 import net.luckperms.api.platform.Platform;
+import org.jspecify.annotations.NonNull;
 
 import java.nio.file.Path;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -28,12 +31,12 @@ public class LPHytaleBootstrap implements LuckPermsBootstrap {
 
     private Instant startTime;
 
-    public LPHytaleBootstrap(LPHytalePlugin plugin, Path dataDirectory, PluginLogger logger, SchedulerAdapter schedulerAdapter, ClassPathAppender classPathAppender) {
-        this.plugin = plugin;
-        this.dataDirectory = dataDirectory;
-        this.logger = logger;
-        this.schedulerAdapter = schedulerAdapter;
-        this.classPathAppender = classPathAppender;
+    public LPHytaleBootstrap(@NonNull LPPlugin lpPlugin) {
+        this.plugin = new LPHytalePlugin(lpPlugin, this);
+        this.dataDirectory = lpPlugin.getDataDirectory();
+        this.logger = new HytalePluginLogger(lpPlugin.getLogger());
+        this.schedulerAdapter = new HytaleSchedulerAdapter(this);
+        this.classPathAppender = new HytaleClassPathAppender();
     }
 
     @Override
@@ -66,7 +69,6 @@ public class LPHytaleBootstrap implements LuckPermsBootstrap {
         return "@VERSION@";
     }
 
-    //TODO: Add event hook to initialise the plugin
     public void init() {
         this.startTime = Instant.now();
         try {
@@ -82,7 +84,6 @@ public class LPHytaleBootstrap implements LuckPermsBootstrap {
         }
     }
 
-    //TODO: Add event hook to shutdown the plugin
     public void shutdown() {
         this.plugin.disable();
     }
@@ -104,55 +105,47 @@ public class LPHytaleBootstrap implements LuckPermsBootstrap {
 
     @Override
     public String getServerVersion() {
-        // TODO: Get hytale server version
-        return "";
+        return "1.0";
     }
 
     @Override
     public Path getDataDirectory() {
-        return this.dataDirectory;
+        return this.dataDirectory.toAbsolutePath();
     }
 
     @Override
     public Optional<Object> getPlayer(UUID uniqueId) {
-        // TODO: Replace 'Object' with player object and configure look ups by uuid
-        return Optional.empty();
+        return Optional.ofNullable(Universe.get().getPlayer(uniqueId));
     }
 
     @Override
     public Optional<UUID> lookupUniqueId(String username) {
-        // TODO: Look up player uuid by username
-        return Optional.empty();
+        return Optional.ofNullable(Universe.get().getPlayer(username, NameMatching.EXACT_IGNORE_CASE)).map(PlayerRef::getUuid);
     }
 
     @Override
     public Optional<String> lookupUsername(UUID uniqueId) {
-        // TODO: Look up player username by uuid
-        return Optional.empty();
+        return Optional.ofNullable(Universe.get().getPlayer(uniqueId)).map(PlayerRef::getUsername);
     }
 
     @Override
     public int getPlayerCount() {
-        // TODO: Get online player count
-        return 0;
+        return Universe.get().getPlayerCount();
     }
 
     @Override
     public Collection<String> getPlayerList() {
-        // TODO: Get online player names
-        return Collections.emptyList();
+        return Universe.get().getPlayers().stream().map(PlayerRef::getUsername).toList();
     }
 
     @Override
     public Collection<UUID> getOnlinePlayers() {
-        // TODO: Get online player IDS
-        return Collections.emptyList();
+        return Universe.get().getPlayers().stream().map(PlayerRef::getUuid).toList();
     }
 
     @Override
     public boolean isPlayerOnline(UUID uniqueId) {
-        //TODO: Check if player is online
-        return false;
+        return Universe.get().getPlayer(uniqueId) != null;
     }
 
 }
