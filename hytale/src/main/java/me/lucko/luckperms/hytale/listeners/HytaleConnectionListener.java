@@ -29,42 +29,59 @@ public class HytaleConnectionListener extends AbstractConnectionListener {
 
     }
 
-    public void onPlayerConnect(PlayerSetupConnectEvent e) {
-        UUID playerId = e.getUuid();
-        String username = e.getUsername();
-        
-        final User user = hytalePlugin.getUserManager().getIfLoaded(playerId);
-
-        if (hytalePlugin.getConfiguration().get(ConfigKeys.DEBUG_LOGINS)) {
-            hytalePlugin.getLogger().info("Processing post-login for " + playerId + " - " + username);
+    public void onPlayerSetupConnect(PlayerSetupConnectEvent e) {
+        try {
+            this.hytalePlugin.getBootstrap().getEnableLatch().await(60, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
         }
 
-        if (user == null) {
-            if (!getUniqueConnections().contains(playerId)) {
-                this.hytalePlugin.getLogger().warn("User " + playerId + " - " + username +
-                        " doesn't have data pre-loaded, they have never been processed during pre-login in this session.");
-            } else {
-                hytalePlugin.getLogger().warn("User " + playerId + " - " + username +
-                        " doesn't currently have data pre-loaded, but they have been processed before in this session.");
-            }
+        UUID uuid = e.getUuid();
+        String username = e.getUsername();
 
-            String errorText = PlainTextComponentSerializer.plainText().serialize(TranslationManager.render(Message.LOADING_STATE_ERROR.build(), Locale.US));
-            if (this.hytalePlugin.getConfiguration().get(ConfigKeys.CANCEL_FAILED_LOGINS)) {
+        if (this.hytalePlugin.getConfiguration().get(ConfigKeys.DEBUG_LOGINS)) {
+            this.hytalePlugin.getLogger().info("Processing pre-login for " + uuid + " - " + username);
+        }
 
-                // disconnect the user
-                e.setCancelled(true);
-                e.setReason(errorText);
+        try {
+            User user = loadUser(uuid, username);
+            recordConnection(uuid);
+            this.hytalePlugin.getEventDispatcher().dispatchPlayerLoginProcess(uuid, username, user);
+        } catch (Exception ex) {
+            this.hytalePlugin.getLogger().severe("Exception occurred whilst loading data for " + uuid + " - " + username, ex);
 
-            } else {
-                // just send a message
-                this.hytalePlugin.getBootstrap().getScheduler().asyncLater(() -> {
-                    PlayerRef player = Universe.get().getPlayer(playerId);
-                    if(player != null) {
-                        player.sendMessage(com.hypixel.hytale.server.core.Message.raw(errorText));
-                    }
-
-                }, 1, TimeUnit.SECONDS);
-            }
+            Component reason = TranslationManager.render(Message.LOADING_DATABASE_ERROR.build());
+            PlainTextComponentSerializer.plainText().serialize(reason);
+            this.hytalePlugin.getEventDispatcher().dispatchPlayerLoginProcess(uuid, username, null);
         }
     }
+
+    public void onPlayerConnect(PlayerConnectEvent e) {
+        PlayerRef ref = e.getPlayerRef();
+
+        if (this.hytalePlugin.getConfiguration().get(ConfigKeys.DEBUG_LOGINS)) {
+            this.hytalePlugin.getLogger().info("Processing login for " + ref.getUuid() + " - " + ref.getUsername());
+        }
+
+        final User user = this.hytalePlugin.getUserManager().getIfLoaded(ref.getUuid());
+
+        if (user == null) {
+            if (!getUniqueConnections().contains(ref.getUuid())) {
+                this.hytalePlugin.getLogger().warn("User " + ref.getUuid() + " - " + ref.getUsername() +
+                        " doesn't have data pre-loaded, they have never been processed during pre-login in this session." +
+                        " - denying login.");
+            } else {
+                this.hytalePlugin.getLogger().warn("User " + ref.getUuid() + " - " + ref.getUsername() +
+                        " doesn't currently have data pre-loaded, but they have been processed before in this session." +
+                        " - denying login.");
+            }
+
+            Component reason = TranslationManager.render(Message.LOADING_STATE_ERROR.build(), Locale.US);
+            ref.getPacketHandler().disconnect(PlainTextComponentSerializer.plainText().serialize(reason));
+            return;
+        }
+
+        this.hytalePlugin.getContextManager().signalContextUpdate(ref);
+    }
+
 }

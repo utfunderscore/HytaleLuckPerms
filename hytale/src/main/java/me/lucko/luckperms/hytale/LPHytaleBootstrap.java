@@ -148,4 +148,7 @@ public class LPHytaleBootstrap implements LuckPermsBootstrap {
         return Universe.get().getPlayer(uniqueId) != null;
     }
 
+    public LPHytalePlugin getPlugin() {
+        return plugin;
+    }
 }

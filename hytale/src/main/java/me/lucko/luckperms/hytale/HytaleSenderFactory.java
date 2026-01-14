@@ -5,6 +5,7 @@ import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.command.system.CommandSender;
 import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import me.lucko.luckperms.common.sender.SenderFactory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -47,15 +48,23 @@ public class HytaleSenderFactory extends SenderFactory<LPHytalePlugin, CommandSe
 
     @Override
     protected Tristate getPermissionValue(CommandSender sender, String node) {
-        return sender instanceof Player player ? getPlugin().getApiProvider().getPlayerAdapter(Player.class).getPermissionData(player)
-                .checkPermission(node) : Tristate.TRUE;
+        if(sender instanceof Player player) {
+            PlayerRef ref = player.getPlayerRef();
+            return getPlugin().getApiProvider().getPlayerAdapter(Player.class).getPermissionData(player)
+                    .checkPermission(node);
+        }
+        return Tristate.TRUE;
     }
 
     @Override
     protected boolean hasPermission(CommandSender sender, String node) {
-        return !(sender instanceof Player player) || getPlugin().getApiProvider().getPlayerAdapter(Player.class).getPermissionData(player)
-                .checkPermission(node)
-                .asBoolean();
+        if(sender instanceof Player player) {
+            PlayerRef ref = player.getPlayerRef();
+            return getPlugin().getApiProvider().getPlayerAdapter(PlayerRef.class).getPermissionData(ref)
+                    .checkPermission(node)
+                    .asBoolean();
+        }
+        return true;
     }
 
     @Override

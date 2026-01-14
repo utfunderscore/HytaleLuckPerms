@@ -1,6 +1,7 @@
 package me.lucko.luckperms.hytale;
 
 import com.hypixel.hytale.server.core.console.ConsoleSender;
+import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerSetupConnectEvent;
 import me.lucko.luckperms.common.api.LuckPermsApiProvider;
 import me.lucko.luckperms.common.calculator.CalculatorFactory;
@@ -73,7 +74,8 @@ public class LPHytalePlugin extends AbstractLuckPermsPlugin {
     protected void registerPlatformListeners() {
         this.connectionListener = new HytaleConnectionListener(this);
 
-        lpPlugin.getEventRegistry().registerGlobal(PlayerSetupConnectEvent.class, playerSetupConnectEvent -> this.connectionListener.onPlayerConnect(playerSetupConnectEvent));
+        lpPlugin.getEventRegistry().registerGlobal(PlayerSetupConnectEvent.class, playerSetupConnectEvent -> this.connectionListener.onPlayerSetupConnect(playerSetupConnectEvent));
+        lpPlugin.getEventRegistry().registerGlobal(PlayerConnectEvent.class, playerSetupConnectEvent -> this.connectionListener.onPlayerConnect(playerSetupConnectEvent));
     }
 
     @Override
