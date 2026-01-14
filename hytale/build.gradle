@@ -24,7 +24,7 @@ dependencies {
     implementation 'com.google.guava:guava:33.5.0-jre'
     implementation 'org.yaml:snakeyaml:2.5'
 
-    implementation(files("$hytaleHome/install/release/package/game/latest/Server/HytaleServer.jar"))
+    compileOnly(files("$hytaleHome/install/release/package/game/latest/Server/HytaleServer.jar"))
 }
 
 blossom {
@@ -64,28 +64,28 @@ artifacts {
 def serverRunDir = objects.directoryProperty()
 serverRunDir.set(file("$projectDir/run"))
 
-tasks.register('runHytaleServer', JavaExec) {
-    group = 'application'
-    description = 'Runs the Hytale server'
-
-    mainClass = 'com.hypixel.hytale.Main'
-    classpath = sourceSets.main.runtimeClasspath
-
-    def params = ["--allow-op", "--assets=$hytaleHome/install/$patchline/package/game/latest/Assets.zip"]
-    standardInput = System.in
-
-    def runDir = serverRunDir.get()
-    runDir.asFile.mkdirs();
-    workingDir = runDir.asFile
-
-    if (includesPack.toBoolean()) {
-        params += "--mods=${sourceSets.main.java.srcDirs.first().parentFile.absolutePath}"
-    }
-
-    if (loadUserMods.toBoolean()) {
-        params += "--mods=$hytaleHome/UserData/Mods"
-    }
-
-    args = params
-    workingDir = serverRunDir
-}
+//tasks.register('runHytaleServer', JavaExec) {
+//    group = 'application'
+//    description = 'Runs the Hytale server'
+//
+//    mainClass = 'com.hypixel.hytale.Main'
+//    classpath = sourceSets.main.runtimeClasspath
+//
+//    def params = ["--allow-op", "--assets=$hytaleHome/install/$patchline/package/game/latest/Assets.zip"]
+//    standardInput = System.in
+//
+//    def runDir = serverRunDir.get()
+//    runDir.asFile.mkdirs();
+//    workingDir = runDir.asFile
+//
+//    if (includesPack.toBoolean()) {
+//        params += "--mods=${sourceSets.main.java.srcDirs.first().parentFile.absolutePath}"
+//    }
+//
+//    if (loadUserMods.toBoolean()) {
+//        params += "--mods=$hytaleHome/UserData/Mods"
+//    }
+//
+//    args = params
+//    workingDir = serverRunDir
+//}
