@@ -91,7 +91,7 @@ public class LPHytaleBootstrap implements LuckPermsBootstrap {
 
     @Override
     public String getVersion() {
-        return "@VERSION@";
+        return "@version@";
     }
 
     public void init() {

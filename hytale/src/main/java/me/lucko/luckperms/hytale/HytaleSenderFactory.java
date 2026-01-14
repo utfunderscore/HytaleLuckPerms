@@ -31,13 +31,17 @@ import com.hypixel.hytale.server.core.command.system.CommandSender;
 import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import me.lucko.luckperms.common.locale.TranslationManager;
 import me.lucko.luckperms.common.sender.SenderFactory;
+import me.lucko.luckperms.hytale.convert.AdventureConversionUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.luckperms.api.util.Tristate;
 
+import java.awt.*;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public class HytaleSenderFactory extends SenderFactory<LPHytalePlugin, CommandSender> {
@@ -67,8 +71,9 @@ public class HytaleSenderFactory extends SenderFactory<LPHytalePlugin, CommandSe
 
     @Override
     protected void sendMessage(CommandSender sender, Component message) {
-        String text = PlainTextComponentSerializer.plainText().serialize(message);
-        sender.sendMessage(Message.raw(text));
+        Component rendered = TranslationManager.render(message, Locale.US);
+        Message text = AdventureConversionUtils.adapt(rendered);
+        sender.sendMessage(text);
     }
 
     @Override
@@ -101,4 +106,5 @@ public class HytaleSenderFactory extends SenderFactory<LPHytalePlugin, CommandSe
     protected boolean isConsole(CommandSender sender) {
         return false;
     }
+
 }
